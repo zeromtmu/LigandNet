@@ -1,26 +1,32 @@
+# Ligand activity prediction using LigandNet models
+# Author: Md Mahmudulla Hassan (hassanmohsin)
+# Department of Computer Science and School of Pharmacy, UTEP
+# Last modified: 05/14/2019
+
 from __future__ import print_function
+import random
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append("../ddt/")
-from utility import FeatureGenerator
 from sklearn.externals import joblib
 import os
-import multiprocessing as mp
 import json
 import warnings
 import time
 warnings.filterwarnings("ignore")
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(current_dir, "../ddt"))
+from utility import FeatureGenerator
 
-MODELS_DIR = "models"
+MODELS_DIR = os.path.join(current_dir, "models")
 PY_VERSION = '27' if sys.version_info[0] < 3 else '35'
 
 
 def get_models():    
-    model_names = open('py' + PY_VERSION + '_models.txt', 'r').readlines()[0].split(',')
+    model_names = open(os.path.join(current_dir, 'py' + PY_VERSION + '_models.txt'), 'r').readlines()[0].split(',')
     for model in model_names:
-        yield model, joblib.load(os.path.join(MODELS_DIR, model))
+        yield model, joblib.load(os.path.join(MODELS_DIR, model), mmap_mode='r+')
 
 def get_prediction(features, confidence=0.9):
     actives = []
@@ -55,7 +61,7 @@ if __name__=="__main__":
     if args.sdf and not os.path.isfile(parse_dict['sdf']):
         print("ERROR: SDF file {} not found".format(parse_dict['sdf']))
         sys.exit(1)
-    
+   
     # Extract features
     ft = FeatureGenerator()
     if args.smiles:
@@ -63,7 +69,7 @@ if __name__=="__main__":
     elif args.sdf:
         ft.load_sdf(parse_dict['sdf'])
     
-    features = ft.extract_tpatf()
+    _, features = ft.extract_tpatf()
     features = np.array(features).reshape((-1, 2692))
     results = get_prediction(features)
     
@@ -76,9 +82,12 @@ if __name__=="__main__":
     # Write the output
     output_dir = parse_dict['out'] if args.out else 'output'
     if not os.path.isdir(output_dir): os.makedirs(output_dir)
-    with open(os.path.join(output_dir, 'output.json'), 'w') as f:
+    # Generate a random file name
+    output_file = ''.join(chr(random.randrange(97, 97 + 26)) for i in range(10))
+    with open(os.path.join(output_dir, output_file + '.json'), 'w') as f:
         json.dump(output, f)  
     
+    print("Output file written to {}/{}.json".format(output_dir, output_file))
     end = time.time()
     print("Execution time: {} seconds.".format(round(end - start, 2)))
     sys.exit(1)
