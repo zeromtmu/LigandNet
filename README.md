@@ -37,3 +37,12 @@ To get the decoys used for training the LigandNet models, run
 
 # Web server
 A web interface for ligand activity prediction using the LigandNet models is available at [LigandNet](https://drugdiscovery.utep.edu/ligandnet)
+
+
+# Docker
+LigandNet is available on [DockerHub](https://hub.docker.com/repository/docker/sirimullalab/ligandnet). To run LigandNet, do
+
+```bash
+1. docker pull sirimullalab/ligandnet
+2. docker run sirimullalab/ligandnet --help
+```
